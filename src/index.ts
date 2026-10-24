@@ -2,6 +2,7 @@ import * as cheerio from "cheerio"
 import { mkdir, readFile, writeFile} from "node:fs/promises";
 import { join } from "node:path"; 
 import{ z } from "zod";
+import { extractCatalogue } from "./catalogue.js";
 //the above tools imimorted are need ed to create acache directory
 
 const runStartedAt = new Date();
@@ -171,28 +172,6 @@ async function getPageHtml(
     return html;
 }
 
-
-function extractCatalogue(html: string, pageUrl: string) {
-    const $ = cheerio.load(html);
-    const bookLinks: string[] = [];
-
-    $("article.product_pod h3 a").each((index, element) => {
-        const href = $(element).attr("href");
-
-        if (href) {
-            const absoluteUrl = new URL(href, pageUrl).href;
-            bookLinks.push(absoluteUrl);
-        }
-    });
-
-    const nextHref = $("li.next a").attr("href");
-
-    const nextPageUrl = nextHref
-        ? new URL(nextHref, pageUrl).href
-        : null;
-
-    return { bookLinks, nextPageUrl };
-}
 
 function cleanDescription(text: string): string | null {
     const cleanedText = text

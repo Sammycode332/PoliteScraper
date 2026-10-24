@@ -4,9 +4,8 @@ import { join } from "node:path";
 import{ z } from "zod";
 import { extractCatalogue } from "./catalogue.js";
 
-import { detectChanges, type BookRecord } from "./change-detection.js";
 //the above tools imimorted are need ed to create acache directory
-
+import { createChangeReport } from "./snapshot.js";
 const runStartedAt = new Date();
 const runStartedMs = Date.now();
 
@@ -341,53 +340,7 @@ for(const record of rawRecords){
 }
 await mkdir("output",{recursive:true});
 
-let previousBooks: BookRecord[] = [];
-let hasPreviousSnapshot = false;
-
-try {
-    const previousJson = await readFile(
-        "output/books.json",
-        "utf-8"
-    );
-
-    previousBooks = JSON.parse(previousJson) as BookRecord[];
-    hasPreviousSnapshot = true;
-} catch (error) {
-    if (
-        !(error instanceof Error) ||
-        !("code" in error) ||
-        error.code !== "ENOENT"
-    ) {
-        throw error;
-    }
-}
-
-const changes = hasPreviousSnapshot
-    ? detectChanges(previousBooks, validBooks)
-    : {
-        newBooks: [],
-        changedBooks: [],
-        unchangedCount: 0
-    };
-
-const changeReport = {
-    generated_at: new Date().toISOString(),
-    baseline: !hasPreviousSnapshot,
-    summary: {
-        new_books: changes.newBooks.length,
-        changed_books: changes.changedBooks.length,
-        unchanged_books: changes.unchangedCount
-    },
-    new_books: changes.newBooks,
-    changed_books: changes.changedBooks
-};
-
-await writeFile(
-    "output/change-report.json",
-    JSON.stringify(changeReport, null, 2),
-    "utf-8"
-);
-
+await createChangeReport(validBooks);
 await writeFile(
     "output/books.json",
     JSON.stringify(validBooks,null,2),

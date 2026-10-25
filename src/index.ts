@@ -6,6 +6,10 @@ import { extractCatalogue } from "./catalogue.js";
 
 //the above tools imimorted are need ed to create acache directory
 import { createChangeReport } from "./snapshot.js";
+import {
+    calculateDashboardStats,
+    renderDashboardHtml
+} from "./dashboard.js";
 const runStartedAt = new Date();
 const runStartedMs = Date.now();
 
@@ -369,6 +373,16 @@ await writeFile(
     JSON.stringify(runReport, null, 2),
     "utf-8"
 );
+const dashboardStats = calculateDashboardStats(validBooks, runReport);
+const dashboardHtml = renderDashboardHtml(dashboardStats);
+
+await writeFile(
+    "output/dashboard.html",
+    dashboardHtml,
+    "utf-8"
+);
+
+console.log("Saved dashboard to output/dashboard.html");
 
 console.log("Saved run report to output/run-report.json");
 
